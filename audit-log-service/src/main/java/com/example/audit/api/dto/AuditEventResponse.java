@@ -1,2 +1,13 @@
-package com.example.audit.api.dto; import com.example.audit.domain.*; import java.time.Instant;
-public record AuditEventResponse(Long id,long chainSequence,String eventType,String actorId,String resourceType,String resourceId,String payload,Instant eventTimestamp,String previousHash,String contentHash,AuditStatus status){ public static AuditEventResponse from(AuditEvent e){return new AuditEventResponse(e.getId(),e.getChainSequence(),e.getEventType(),e.getActorId(),e.getResourceType(),e.getResourceId(),e.getPayload(),e.getEventTimestamp(),e.getPreviousHash(),e.getContentHash(),e.getStatus());}}
+package com.example.audit.api.dto;
+
+import com.example.audit.domain.*;
+
+import java.time.Instant;
+
+public record AuditEventResponse(Long id, long chainSequence, String eventType, String actorId, String resourceType,
+                                 String resourceId, String payload, Instant eventTimestamp, String previousHash,
+                                 String contentHash, AuditStatus status) {
+    public static AuditEventResponse from(AuditEvent e) {
+        return new AuditEventResponse(e.getId(), e.getChainSequence(), e.getEventType(), e.getActorId(), e.getResourceType(), e.getResourceId(), e.getPayload(), e.getEventTimestamp(), e.getPreviousHash(), e.getContentHash(), e.getStatus());
+    }
+}
