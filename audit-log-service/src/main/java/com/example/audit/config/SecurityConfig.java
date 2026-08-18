@@ -17,7 +17,7 @@ import org.springframework.security.oauth2.jwt.*;
 public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(a -> a.requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/health", "/actuator/info", "/h2-console/**").permitAll().anyRequest().authenticated()).headers(h -> h.frameOptions(f -> f.sameOrigin())).oauth2ResourceServer(o -> o.jwt(j -> {
+        return http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(a -> a.requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/health", "/actuator/info").permitAll().requestMatchers("/h2-console/**").hasRole("ADMIN").anyRequest().authenticated()).headers(h -> h.frameOptions(f -> f.sameOrigin())).oauth2ResourceServer(o -> o.jwt(j -> {
         })).build();
     }
 
@@ -33,5 +33,10 @@ public class SecurityConfig {
     @Bean
     JwtEncoder jwtEncoder(AppProperties p) {
         return new NimbusJwtEncoder(new ImmutableSecret<SecurityContext>(key(p)));
+    }
+
+    @Bean
+    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(10);
     }
 }
