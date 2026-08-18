@@ -10,7 +10,9 @@ import com.example.audit.api.dto.CreateAuditEventRequest;
 import com.example.audit.api.dto.VerificationResponse;
 import com.example.audit.service.AuditService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.time.Instant;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,104 +32,106 @@ import org.springframework.test.web.servlet.MockMvc;
 @ExtendWith(MockitoExtension.class)
 class AuditControllerTest {
 
-  @Autowired private MockMvc mvc;
+    @Autowired
+    private MockMvc mvc;
 
-  @MockBean private AuditService service;
+    @MockBean
+    private AuditService service;
 
-  @Autowired private ObjectMapper mapper;
+    @Autowired
+    private ObjectMapper mapper;
 
-  @Test
-  @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
-  void createEventWithValidAuthority() throws Exception {
-    CreateAuditEventRequest req =
-        new CreateAuditEventRequest("CREATE", "user1", "ACCOUNT", "123", "{}");
-    AuditEventResponse resp =
-        new AuditEventResponse(
-            1L,
-            1L,
-            "CREATE",
-            "user1",
-            "ACCOUNT",
-            "123",
-            "{}",
-            Instant.parse("2026-01-01T00:00:00Z"),
-            "GENESIS",
-            "HASH1",
-            null);
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
+    void createEventWithValidAuthority() throws Exception {
+        CreateAuditEventRequest req =
+                new CreateAuditEventRequest("CREATE", "user1", "ACCOUNT", "123", "{}");
+        AuditEventResponse resp =
+                new AuditEventResponse(
+                        1L,
+                        1L,
+                        "CREATE",
+                        "user1",
+                        "ACCOUNT",
+                        "123",
+                        "{}",
+                        Instant.parse("2026-01-01T00:00:00Z"),
+                        "GENESIS",
+                        "HASH1",
+                        null);
 
-    when(service.append(req)).thenReturn(resp);
+        when(service.append(req)).thenReturn(resp);
 
-    mvc.perform(
-            post("/audit/events")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(req)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.chainSequence").value(1));
+        mvc.perform(
+                        post("/audit/events")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.chainSequence").value(1));
 
-    verify(service, times(1)).append(req);
-  }
+        verify(service, times(1)).append(req);
+    }
 
-  @Test
-  void createEventWithoutAuthShouldFail() throws Exception {
-    CreateAuditEventRequest req =
-        new CreateAuditEventRequest("CREATE", "user1", "ACCOUNT", "123", "{}");
+    @Test
+    void createEventWithoutAuthShouldFail() throws Exception {
+        CreateAuditEventRequest req =
+                new CreateAuditEventRequest("CREATE", "user1", "ACCOUNT", "123", "{}");
 
-    mvc.perform(
-            post("/audit/events")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(req)))
-        .andExpect(status().isUnauthorized());
-  }
+        mvc.perform(
+                        post("/audit/events")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(req)))
+                .andExpect(status().isUnauthorized());
+    }
 
-  @Test
-  @WithMockUser(authorities = "SCOPE_AUDIT_READER")
-  void queryEventsWithValidAuthority() throws Exception {
-    Page<AuditEventResponse> page = new PageImpl<>(java.util.List.of());
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_READER")
+    void queryEventsWithValidAuthority() throws Exception {
+        Page<AuditEventResponse> page = new PageImpl<>(java.util.List.of());
 
-    when(service.query(nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any()))
-        .thenReturn(page);
+        when(service.query(nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any()))
+                .thenReturn(page);
 
-    mvc.perform(get("/audit/events").param("actorId", "user1"))
-        .andExpect(status().isOk());
+        mvc.perform(get("/audit/events").param("actorId", "user1"))
+                .andExpect(status().isOk());
 
-    verify(service, times(1)).query(nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any());
-  }
+        verify(service, times(1)).query(nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any());
+    }
 
-  @Test
-  void queryEventsWithoutAuthShouldFailUnauthorized() throws Exception {
-    mvc.perform(get("/audit/events")).andExpect(status().isUnauthorized());
-  }
+    @Test
+    void queryEventsWithoutAuthShouldFailUnauthorized() throws Exception {
+        mvc.perform(get("/audit/events")).andExpect(status().isUnauthorized());
+    }
 
 
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_ADMIN")
+    void verifyEventsWithValidAuthority() throws Exception {
+        VerificationResponse resp = new VerificationResponse(true, 1, null, null, null, "All records verified");
 
-  @Test
-  @WithMockUser(authorities = "SCOPE_AUDIT_ADMIN")
-  void verifyEventsWithValidAuthority() throws Exception {
-    VerificationResponse resp = new VerificationResponse(true, 1, null, null, null, "All records verified");
+        when(service.verify()).thenReturn(resp);
 
-    when(service.verify()).thenReturn(resp);
+        mvc.perform(get("/audit/verify"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.intact").value(true));
 
-    mvc.perform(get("/audit/verify"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.intact").value(true));
+        verify(service, times(1)).verify();
+    }
 
-    verify(service, times(1)).verify();
-  }
+    @Test
+    void verifyEventsWithoutAuthShouldFail() throws Exception {
+        mvc.perform(get("/audit/verify")).andExpect(status().isUnauthorized());
+    }
 
-  @Test
-  void verifyEventsWithoutAuthShouldFail() throws Exception {
-    mvc.perform(get("/audit/verify")).andExpect(status().isUnauthorized());
-  }
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
+    void createEventWithInvalidRequestShouldFailValidation() throws Exception {
+        String invalidJson = "{\"eventType\":\"\"}";
 
-  @Test
-  @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
-  void createEventWithInvalidRequestShouldFailValidation() throws Exception {
-    String invalidJson = "{\"eventType\":\"\"}";
-
-    mvc.perform(
-            post("/audit/events")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
-        .andExpect(status().isBadRequest());
-  }
+        mvc.perform(
+                        post("/audit/events")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidJson))
+                .andExpect(status().isBadRequest());
+    }
 }

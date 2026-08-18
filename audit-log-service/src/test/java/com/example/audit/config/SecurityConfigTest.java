@@ -16,36 +16,39 @@ import org.springframework.security.web.SecurityFilterChain;
 @ExtendWith(MockitoExtension.class)
 class SecurityConfigTest {
 
-  @Autowired private SecurityFilterChain filterChain;
+    @Autowired
+    private SecurityFilterChain filterChain;
 
-  @Autowired private JwtDecoder jwtDecoder;
+    @Autowired
+    private JwtDecoder jwtDecoder;
 
-  @Autowired private JwtEncoder jwtEncoder;
+    @Autowired
+    private JwtEncoder jwtEncoder;
 
-  @Test
-  void securityFilterChainBeanExists() {
-    assertNotNull(filterChain);
-  }
+    @Test
+    void securityFilterChainBeanExists() {
+        assertNotNull(filterChain);
+    }
 
-  @Test
-  void jwtDecoderBeanExists() {
-    assertNotNull(jwtDecoder);
-  }
+    @Test
+    void jwtDecoderBeanExists() {
+        assertNotNull(jwtDecoder);
+    }
 
-  @Test
-  void jwtEncoderBeanExists() {
-    assertNotNull(jwtEncoder);
-  }
+    @Test
+    void jwtEncoderBeanExists() {
+        assertNotNull(jwtEncoder);
+    }
 
-  @Test
-  void jwtDecoderCanDecodeValidToken() throws Exception {
-    // This test verifies the JWT decoder is properly configured
-    assertNotNull(jwtDecoder);
-  }
+    @Test
+    void jwtDecoderCanDecodeValidToken() throws Exception {
+        // This test verifies the JWT decoder is properly configured
+        assertNotNull(jwtDecoder);
+    }
 
-  @Test
-  void jwtEncoderCanEncodeToken() throws Exception {
-    // This test verifies the JWT encoder is properly configured
-    assertNotNull(jwtEncoder);
-  }
+    @Test
+    void jwtEncoderCanEncodeToken() throws Exception {
+        // This test verifies the JWT encoder is properly configured
+        assertNotNull(jwtEncoder);
+    }
 }

@@ -20,86 +20,88 @@ import org.springframework.test.web.servlet.MockMvc;
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
-  @Autowired private MockMvc mvc;
+    @Autowired
+    private MockMvc mvc;
 
-  @Autowired private ObjectMapper mapper;
+    @Autowired
+    private ObjectMapper mapper;
 
-  @Test
-  void tokenWithValidWriterCredentials() throws Exception {
-    Login login = new Login("writer", "writer123");
+    @Test
+    void tokenWithValidWriterCredentials() throws Exception {
+        Login login = new Login("writer", "writer123");
 
-    mvc.perform(
-            post("/auth/token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(login)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.accessToken").exists())
-        .andExpect(jsonPath("$.tokenType").value("Bearer"))
-        .andExpect(jsonPath("$.scope").value("AUDIT_WRITER AUDIT_READER"));
-  }
+        mvc.perform(
+                        post("/auth/token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(login)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.scope").value("AUDIT_WRITER AUDIT_READER"));
+    }
 
-  @Test
-  void tokenWithValidReaderCredentials() throws Exception {
-    Login login = new Login("reader", "reader123");
+    @Test
+    void tokenWithValidReaderCredentials() throws Exception {
+        Login login = new Login("reader", "reader123");
 
-    mvc.perform(
-            post("/auth/token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(login)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.accessToken").exists())
-        .andExpect(jsonPath("$.tokenType").value("Bearer"))
-        .andExpect(jsonPath("$.scope").value("AUDIT_READER"));
-  }
+        mvc.perform(
+                        post("/auth/token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(login)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.scope").value("AUDIT_READER"));
+    }
 
-  @Test
-  void tokenWithValidAdminCredentials() throws Exception {
-    Login login = new Login("admin", "admin123");
+    @Test
+    void tokenWithValidAdminCredentials() throws Exception {
+        Login login = new Login("admin", "admin123");
 
-    mvc.perform(
-            post("/auth/token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(login)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.accessToken").exists())
-        .andExpect(jsonPath("$.tokenType").value("Bearer"))
-        .andExpect(jsonPath("$.scope").value("AUDIT_WRITER AUDIT_READER AUDIT_ADMIN AUDIT_EXPORTER"));
-  }
+        mvc.perform(
+                        post("/auth/token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(login)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.scope").value("AUDIT_WRITER AUDIT_READER AUDIT_ADMIN AUDIT_EXPORTER"));
+    }
 
-  @Test
-  void tokenWithInvalidPassword() throws Exception {
-    Login login = new Login("writer", "wrongpassword");
+    @Test
+    void tokenWithInvalidPassword() throws Exception {
+        Login login = new Login("writer", "wrongpassword");
 
-    mvc.perform(
-            post("/auth/token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(login)))
-        .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.error").value("invalid_credentials"));
-  }
+        mvc.perform(
+                        post("/auth/token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(login)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("invalid_credentials"));
+    }
 
-  @Test
-  void tokenWithInvalidUsername() throws Exception {
-    Login login = new Login("invaliduser", "anypassword");
+    @Test
+    void tokenWithInvalidUsername() throws Exception {
+        Login login = new Login("invaliduser", "anypassword");
 
-    mvc.perform(
-            post("/auth/token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(login)))
-        .andExpect(status().isUnauthorized())
-        .andExpect(jsonPath("$.error").value("invalid_credentials"));
-  }
+        mvc.perform(
+                        post("/auth/token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(login)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("invalid_credentials"));
+    }
 
-  @Test
-  void tokenHasExpirationTime() throws Exception {
-    Login login = new Login("writer", "writer123");
+    @Test
+    void tokenHasExpirationTime() throws Exception {
+        Login login = new Login("writer", "writer123");
 
-    mvc.perform(
-            post("/auth/token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(login)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.expiresIn").isNumber())
-        .andExpect(jsonPath("$.expiresIn").exists());
-  }
+        mvc.perform(
+                        post("/auth/token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(login)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expiresIn").isNumber())
+                .andExpect(jsonPath("$.expiresIn").exists());
+    }
 }

@@ -19,50 +19,52 @@ import org.springframework.test.web.servlet.MockMvc;
 @ExtendWith(MockitoExtension.class)
 class ApiExceptionHandlerTest {
 
-  @Autowired private MockMvc mvc;
+    @Autowired
+    private MockMvc mvc;
 
-  @Autowired private ObjectMapper mapper;
+    @Autowired
+    private ObjectMapper mapper;
 
-  @Test
-  @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
-  void validationErrorReturnsBadRequestWithFieldErrors() throws Exception {
-    // Create invalid request with missing required fields - null eventType
-    String invalidJson = "{\"eventType\":null,\"actorId\":\"user\",\"resourceType\":\"ACCOUNT\",\"resourceId\":\"1\",\"payload\":\"{}\"}";
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
+    void validationErrorReturnsBadRequestWithFieldErrors() throws Exception {
+        // Create invalid request with missing required fields - null eventType
+        String invalidJson = "{\"eventType\":null,\"actorId\":\"user\",\"resourceType\":\"ACCOUNT\",\"resourceId\":\"1\",\"payload\":\"{}\"}";
 
-    mvc.perform(
-            post("/audit/events")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("validation_failed"))
-        .andExpect(jsonPath("$.fields").exists());
-  }
+        mvc.perform(
+                        post("/audit/events")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("validation_failed"))
+                .andExpect(jsonPath("$.fields").exists());
+    }
 
-  @Test
-  @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
-  void validationErrorHandlesMultipleFieldErrors() throws Exception {
-    // Create invalid request with multiple missing fields
-    String invalidJson = "{\"eventType\":null,\"actorId\":null}";
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
+    void validationErrorHandlesMultipleFieldErrors() throws Exception {
+        // Create invalid request with multiple missing fields
+        String invalidJson = "{\"eventType\":null,\"actorId\":null}";
 
-    mvc.perform(
-            post("/audit/events")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("validation_failed"));
-  }
+        mvc.perform(
+                        post("/audit/events")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("validation_failed"));
+    }
 
-  @Test
-  @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
-  void validationErrorIncludesFieldMessages() throws Exception {
-    String invalidJson = "{\"eventType\":\"\"}";
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
+    void validationErrorIncludesFieldMessages() throws Exception {
+        String invalidJson = "{\"eventType\":\"\"}";
 
-    mvc.perform(
-            post("/audit/events")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(invalidJson))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("validation_failed"))
-        .andExpect(jsonPath("$.fields").isMap());
-  }
+        mvc.perform(
+                        post("/audit/events")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("validation_failed"))
+                .andExpect(jsonPath("$.fields").isMap());
+    }
 }
