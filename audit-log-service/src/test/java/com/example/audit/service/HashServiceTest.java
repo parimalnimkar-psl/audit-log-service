@@ -1,0 +1,2 @@
+package com.example.audit.service; import static org.junit.jupiter.api.Assertions.*; import java.time.Instant; import org.junit.jupiter.api.Test;
+class HashServiceTest { HashService s=new HashService(); @Test void deterministicHash(){String a=s.hash(s.canonical(1,"A","u","R","1","{}",Instant.parse("2026-01-01T00:00:00Z")));String b=s.hash(s.canonical(1,"A","u","R","1","{}",Instant.parse("2026-01-01T00:00:00Z")));assertEquals(a,b);assertEquals(64,a.length());} @Test void changedContentChangesHash(){assertNotEquals(s.hash("a"),s.hash("b"));} }
