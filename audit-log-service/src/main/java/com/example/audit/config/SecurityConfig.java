@@ -2,23 +2,33 @@ package com.example.audit.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.proc.SecurityContext;
-
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.context.annotation.*;
+import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(a -> a.requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/health", "/actuator/info").permitAll().requestMatchers("/h2-console/**").hasRole("ADMIN").anyRequest().authenticated()).headers(h -> h.frameOptions(f -> f.sameOrigin())).oauth2ResourceServer(o -> o.jwt(j -> {
-        })).build();
+        return http.csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(a -> a
+                .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/h2-console/**").hasRole("ADMIN")
+                .anyRequest().authenticated())
+            .headers(h -> h.frameOptions(f -> f.sameOrigin()))
+            .oauth2ResourceServer(o -> o.jwt(j -> {}))
+            .build();
+    }
+
+    @Bean
+    PageableHandlerMethodArgumentResolverCustomizer pageableCustomizer() {
+        return resolver -> resolver.setMaxPageSize(200);
     }
 
     private SecretKey key(AppProperties p) {

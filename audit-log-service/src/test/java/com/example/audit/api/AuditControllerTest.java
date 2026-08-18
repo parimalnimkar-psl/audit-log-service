@@ -66,7 +66,7 @@ class AuditControllerTest {
                         post("/audit/events")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.chainSequence").value(1));
 
         verify(service, times(1)).append(req);
@@ -85,17 +85,17 @@ class AuditControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = "SCOPE_AUDIT_READER")
+    @WithMockUser(username = "reader", authorities = "SCOPE_AUDIT_READER")
     void queryEventsWithValidAuthority() throws Exception {
         Page<AuditEventResponse> page = new PageImpl<>(java.util.List.of());
 
-        when(service.query(nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any()))
+        when(service.query(eq("reader"), nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any()))
                 .thenReturn(page);
 
-        mvc.perform(get("/audit/events").param("actorId", "user1"))
+        mvc.perform(get("/audit/events"))
                 .andExpect(status().isOk());
 
-        verify(service, times(1)).query(nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any());
+        verify(service, times(1)).query(eq("reader"), nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any());
     }
 
     @Test

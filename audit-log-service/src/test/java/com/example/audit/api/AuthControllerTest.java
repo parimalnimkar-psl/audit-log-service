@@ -69,6 +69,24 @@ class AuthControllerTest {
     }
 
     @Test
+    void tokenWithRepeatedBadPasswordIsRateLimited() throws Exception {
+        for (int i = 0; i < 6; i++) {
+            mvc.perform(
+                            post("/auth/token")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(mapper.writeValueAsString(new Login("writer", "wrongpassword"))))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        mvc.perform(
+                        post("/auth/token")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(mapper.writeValueAsString(new Login("writer", "wrongpassword"))))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.error").value("rate_limited"));
+    }
+
+    @Test
     void tokenWithInvalidPassword() throws Exception {
         Login login = new Login("writer", "wrongpassword");
 
