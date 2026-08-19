@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.web.SecurityFilterChain;
 
 @SpringBootTest
@@ -42,13 +46,17 @@ class SecurityConfigTest {
 
     @Test
     void jwtDecoderCanDecodeValidToken() throws Exception {
-        // This test verifies the JWT decoder is properly configured
-        assertNotNull(jwtDecoder);
+        var now = java.time.Instant.now();
+        var claims = JwtClaimsSet.builder().issuer("audit-log-service").subject("test")
+            .issuedAt(now).expiresAt(now.plusSeconds(60)).claim("scope", "AUDIT_READER").build();
+        String token = jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+        assertEquals("test", jwtDecoder.decode(token).getSubject());
     }
 
     @Test
     void jwtEncoderCanEncodeToken() throws Exception {
-        // This test verifies the JWT encoder is properly configured
-        assertNotNull(jwtEncoder);
+        var claims = JwtClaimsSet.builder().subject("test").build();
+        var header = JwsHeader.with(MacAlgorithm.HS256).build();
+        assertFalse(jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue().isBlank());
     }
 }

@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.audit.api.dto.AuditEventResponse;
 import com.example.audit.api.dto.CreateAuditEventRequest;
 import com.example.audit.api.dto.VerificationResponse;
+import com.example.audit.api.dto.AuditExportResponse;
 import com.example.audit.service.AuditService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -152,5 +153,42 @@ class AuditControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(invalidJson))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_READER")
+    void writerEndpointRejectsReader() throws Exception {
+        mvc.perform(post("/audit/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"eventType\":\"CREATE\",\"actorId\":\"reader\",\"resourceType\":\"ACCOUNT\",\"resourceId\":\"1\",\"payload\":\"{}\"}"))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
+    void malformedJsonReturnsBadRequest() throws Exception {
+        mvc.perform(post("/audit/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{not-json"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("invalid_payload"));
+    }
+
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_ADMIN")
+    void adminCanExportAuditRecords() throws Exception {
+        when(service.export(nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class)))
+            .thenReturn(new AuditExportResponse("json", "SHA-256", "GENESIS", Instant.parse("2026-01-01T00:00:00Z"), 0, java.util.List.of()));
+
+        mvc.perform(get("/audit/export"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.hashAlgorithm").value("SHA-256"))
+            .andExpect(jsonPath("$.recordCount").value(0));
+    }
+
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_READER")
+    void readerCannotExportAuditRecords() throws Exception {
+        mvc.perform(get("/audit/export")).andExpect(status().isForbidden());
     }
 }
