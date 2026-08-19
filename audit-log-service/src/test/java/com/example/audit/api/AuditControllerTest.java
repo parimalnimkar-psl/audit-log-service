@@ -11,6 +11,11 @@ import com.example.audit.api.dto.VerificationResponse;
 import com.example.audit.api.dto.AuditExportResponse;
 import com.example.audit.service.AuditService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 
 import java.time.Instant;
 
@@ -41,6 +46,9 @@ class AuditControllerTest {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    private JwtEncoder jwtEncoder;
 
     @Test
         @WithMockUser(username = "user1", authorities = "SCOPE_AUDIT_WRITER")
@@ -190,5 +198,22 @@ class AuditControllerTest {
     @WithMockUser(authorities = "SCOPE_AUDIT_READER")
     void readerCannotExportAuditRecords() throws Exception {
         mvc.perform(get("/audit/export")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void expiredBearerTokenIsRejected() throws Exception {
+        var now = Instant.now();
+        var claims = JwtClaimsSet.builder()
+            .issuer("audit-log-service")
+            .subject("reader")
+            .issuedAt(now.minusSeconds(120))
+            .expiresAt(now.minusSeconds(60))
+            .claim("scope", "AUDIT_READER")
+            .build();
+        String token = jwtEncoder.encode(JwtEncoderParameters.from(
+            JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+
+        mvc.perform(get("/audit/events").header("Authorization", "Bearer " + token))
+            .andExpect(status().isUnauthorized());
     }
 }

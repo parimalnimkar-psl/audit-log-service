@@ -124,4 +124,13 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.expiresIn").isNumber())
                 .andExpect(jsonPath("$.expiresIn").exists());
     }
+
+    @Test
+    void blankLoginFieldsReturnValidationError() throws Exception {
+        mvc.perform(post("/auth/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"\",\"password\":\"\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("validation_failed"));
+    }
 }

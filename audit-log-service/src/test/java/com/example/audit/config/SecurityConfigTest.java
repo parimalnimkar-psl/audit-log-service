@@ -15,8 +15,14 @@ import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
 class SecurityConfigTest {
 
@@ -28,6 +34,9 @@ class SecurityConfigTest {
 
     @Autowired
     private JwtEncoder jwtEncoder;
+
+    @Autowired
+    private MockMvc mvc;
 
     @Test
     void securityFilterChainBeanExists() {
@@ -58,5 +67,24 @@ class SecurityConfigTest {
         var claims = JwtClaimsSet.builder().subject("test").build();
         var header = JwsHeader.with(MacAlgorithm.HS256).build();
         assertFalse(jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue().isBlank());
+    }
+
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_READER")
+    void readerCannotAccessH2ConsoleOrMetrics() throws Exception {
+        mvc.perform(get("/h2-console/login.jsp")).andExpect(status().isForbidden());
+        mvc.perform(get("/actuator/metrics")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_ADMIN")
+    void adminCanAccessProtectedMetrics() throws Exception {
+        mvc.perform(get("/actuator/metrics")).andExpect(status().isOk());
+    }
+
+    @Test
+    void malformedBearerTokenIsRejected() throws Exception {
+        mvc.perform(get("/audit/events").header("Authorization", "Bearer malformed"))
+            .andExpect(status().isUnauthorized());
     }
 }

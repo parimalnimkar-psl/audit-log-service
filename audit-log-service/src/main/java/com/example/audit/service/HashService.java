@@ -33,11 +33,6 @@ public class HashService {
         return String.join("|", v1, s, t, a, r, ri, p, tss);
     }
 
-    public String unescape(String value) {
-        if (value == null) return "";
-        return value.replace("\\|", "|").replace("\\\\", "\\");
-    }
-
     private String escape(String value) {
         if (value == null) return "";
         return value.replace("\\", "\\\\").replace("|", "\\|");

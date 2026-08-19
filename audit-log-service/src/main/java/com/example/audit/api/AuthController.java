@@ -18,6 +18,9 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.context.annotation.Profile;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @RestController
 @RequestMapping("/auth")
@@ -40,7 +43,9 @@ public class AuthController {
         passwordEncoder = pe;
     }
 
-    public record Login(String username, String password) {
+    public record Login(
+        @NotBlank @Size(max = 100) String username,
+        @NotBlank @Size(max = 200) String password) {
     }
 
     public record Token(
@@ -52,7 +57,7 @@ public class AuthController {
 
     @PostMapping("/token")
     @Operation(summary = "Generate JWT token", description = "Authenticates user and returns JWT token for API access")
-    public ResponseEntity<?> token(@RequestBody Login login) {
+    public ResponseEntity<?> token(@Valid @RequestBody Login login) {
         String userName = login == null || login.username() == null ? "" : login.username().trim();
         if (userName.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

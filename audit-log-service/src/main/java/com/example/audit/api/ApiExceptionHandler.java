@@ -32,6 +32,11 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "not_found"));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<?> invalidArgument(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", "invalid_request", "message", e.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<?> generic(Exception e) {
         return ResponseEntity.status(500).body(Map.of("error", "internal_error"));

@@ -1,0 +1,5 @@
+app:
+  jwt:
+    secret: test-only-secret-key-that-is-at-least-32-characters
+    issuer: audit-log-service
+    expiration-minutes: 120
