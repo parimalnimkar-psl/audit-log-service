@@ -5,7 +5,7 @@
 **Framework:** Spring Boot 3.3.5  
 **Status:** ✅ **FINAL BUILD VERIFIED; PRODUCTION DEPLOYMENT REQUIRES KEYCLOAK PROFILE AND MULTI-INSTANCE LOCK REVIEW**
 
-> This document was regenerated after the security remediation. Current evidence is 75 passing tests, 81% line coverage, and `mvn clean verify` success. Older endpoint examples below are historical scenario examples and are not executable evidence.
+> This document was regenerated after the security remediation. Current evidence is 86 passing tests, 83.6% line coverage, and `mvn clean verify` success. Older endpoint examples below are historical scenario examples and are not executable evidence.
 
 ---
 
@@ -13,7 +13,7 @@
 
 The Audit Log Service has been **fully tested and verified**. All core functionality is operational and meets all requirements specified in Scenario A. The application is running successfully on port 8080 with complete API coverage, comprehensive documentation, and production-ready code quality.
 
-**Key Achievement:** ✅ **81% Line Coverage** with **75 Passing Tests**
+**Key Achievement:** ✅ **83.6% Line Coverage** with **86 Passing Tests**
 
 ---
 
@@ -387,7 +387,7 @@ OpenApiConfigTest:              5 tests
 AppPropertiesTest:              5 tests
 AuditLogApplicationTest:         2 tests
 ----------------------------------------
-TOTAL:                          59 tests ✓
+TOTAL:                          86 tests in the final verification run ✓
 ```
 
 ### Build Status
@@ -395,7 +395,7 @@ TOTAL:                          59 tests ✓
 Clean Build: mvn clean verify
 Result: BUILD SUCCESS ✓
 Compilation: 0 errors
-Tests: 59/59 passing (100%)
+Tests: 86/86 passing (100%)
 ```
 
 ---

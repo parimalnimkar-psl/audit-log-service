@@ -29,7 +29,7 @@ public class ApiRateLimitFilter extends OncePerRequestFilter {
         long now = System.currentTimeMillis();
         Window window = windows.compute(key, (ignored, current) ->
             current == null || now - current.startedAt() >= WINDOW.toMillis()
-                ? new Window(now, new AtomicInteger(1))
+                ? new Window(now, new AtomicInteger(0))
                 : current);
         if (window.count().incrementAndGet() > MAX_REQUESTS) {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());

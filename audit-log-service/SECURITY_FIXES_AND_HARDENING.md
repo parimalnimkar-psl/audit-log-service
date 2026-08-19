@@ -2,7 +2,21 @@
 
 **Date:** August 18, 2026  
 **Version:** 2.0.0 (Security Hardened)  
-**Status:** ✅ Critical Security Issues Resolved
+**Status:** Historical hardening notes; current-state claims are defined by the correction table below.
+
+> The command transcripts in this document are design-era examples, not retained runtime evidence. Do not infer current behavior from their expected output. Use the current source, Surefire/JaCoCo XML, and `mvn clean verify` instead.
+
+## Current-state correction table
+
+| Finding | Current implementation | Current executable evidence |
+|---|---|---|
+| Datastore exposure | Local H2 is protected; Keycloak profile denies H2 | Security configuration and live 401/404 probes |
+| Canonicalization | Raw values are verified symmetrically; timestamp precision is normalized | Escaped-value and persisted tamper tests |
+| Admin API | Scope-based admin authorization is used | Admin/reader controller tests |
+| Actor attribution | Authenticated principal replaces request actor | Actor-spoofing controller test |
+| Sequence/concurrency | Database sequence plus process-local append lock | Concurrent H2 integration test |
+| API abuse controls | Failed-login limiter and API request limiter | Auth and `ApiRateLimitFilterTest` |
+| Keycloak | OIDC resource-server profile is available but requires an external issuer | Not locally integration-tested without Keycloak |
 
 ---
 
@@ -489,7 +503,7 @@ VERIFY=$(curl -s -X GET http://localhost:8080/audit/verify \
   -H "Authorization: Bearer $ADMIN_TOKEN")
 
 echo $VERIFY | jq '.intact'
-# Expected: true
+# Historical expected result; current result is established by the escaped-value and persistence integration tests.
 ```
 
 ### Test 3: User Management API

@@ -1,4 +1,6 @@
-# Audit Log Service - Development Prompts
+# Audit Log Service - Development Prompt Plan
+
+> This file is a forward-looking engineering prompt plan and checklist. It is not a transcript of prompts actually issued and is not used as evidence of completed behavior. Actual AI-assisted tasks, decisions, affected files, and validation are recorded in `docs/ai-usage-log.md`.
 
 ## Overview
 This document contains step-by-step prompts to guide the development of the Audit Log Service project from initial setup through production-ready deployment.
@@ -398,7 +400,7 @@ Use these checkpoints to track progress:
 - [ ] **Prompt 5:** Service layer with hash chaining and verification
 - [ ] **Prompt 6:** REST API endpoints functional with proper status codes
 - [ ] **Prompt 7:** JWT authentication and authorization working
-- [ ] **Prompt 8:** 93% code coverage achieved, 59 tests passing
+- [ ] **Prompt 8:** Final coverage and test totals must be read from the current JaCoCo/Surefire reports
 - [ ] **Prompt 9:** Swagger UI interactive and complete
 - [ ] **Prompt 10:** Code quality gates passed, production deployment ready
 
