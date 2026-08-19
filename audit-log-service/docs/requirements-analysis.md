@@ -1,13 +1,7 @@
 # Requirements Analysis
 
 ## Core requirements
-- Append-only audit event creation with event type, actor, resource, payload and timestamp.
-- Query filtering by actor/resource/event type/time range with pagination.
-- Tamper-evident hash chain: each event has its content hash and previous hash; first event uses a genesis value.
-- Verification identifies whether the chain is intact and reports the first inconsistency.
-- Demonstrate tampering by direct datastore modification and subsequent verification.
-- Retention/archive, structured redaction and verifiable export are addressed by the design.
-- Compliance reporting requirement must be clarified before final implementation.
+- Retention/archive and structured redaction are documented design scope-outs pending retention rules and key-management approval. Verifiable JSON export is implemented at `GET /audit/export`.
 
 ## Implementation decisions
 Java 17, Spring Boot, Maven, Spring Data JPA/Hibernate, PostgreSQL, Spring Security/JWT, JUnit 5/Mockito, JaCoCo, OpenAPI, SLF4J/Logback and Actuator/Micrometer are selected implementation technologies. The default H2 profile is supplied for immediate local execution; PostgreSQL is the intended relational deployment profile.
