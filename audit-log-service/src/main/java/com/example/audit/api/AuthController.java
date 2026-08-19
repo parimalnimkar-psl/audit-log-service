@@ -3,6 +3,7 @@ package com.example.audit.api;
 import com.example.audit.config.AppProperties;
 import com.example.audit.domain.User;
 import com.example.audit.repository.UserRepository;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Duration;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authentication", description = "Authentication endpoints")
 public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final int MAX_FAILED_ATTEMPTS = 6;
     private static final Duration FAILURE_WINDOW = Duration.ofMinutes(5);
     private final JwtEncoder encoder;
     private final AppProperties props;
@@ -40,7 +41,11 @@ public class AuthController {
     public record Login(String username, String password) {
     }
 
-    public record Token(String access_token, String token_type, long expires_in, String scope) {
+    public record Token(
+        @JsonProperty("accessToken") String accessToken,
+        @JsonProperty("tokenType") String tokenType,
+        @JsonProperty("expiresIn") long expiresIn,
+        @JsonProperty("scope") String scope) {
     }
 
     @PostMapping("/token")
@@ -78,7 +83,7 @@ public class AuthController {
         String scope = switch (user.getRole()) {
             case "ROLE_AUDIT_WRITER" -> "AUDIT_WRITER AUDIT_READER";
             case "ROLE_AUDIT_READER" -> "AUDIT_READER";
-            case "ROLE_ADMIN" -> "AUDIT_WRITER AUDIT_READER AUDIT_ADMIN";
+            case "ROLE_ADMIN" -> "AUDIT_WRITER AUDIT_READER AUDIT_ADMIN AUDIT_EXPORTER";
             default -> "AUDIT_READER";
         };
 

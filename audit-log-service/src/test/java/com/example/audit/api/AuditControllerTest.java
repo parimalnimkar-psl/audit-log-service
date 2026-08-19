@@ -89,13 +89,13 @@ class AuditControllerTest {
     void queryEventsWithValidAuthority() throws Exception {
         Page<AuditEventResponse> page = new PageImpl<>(java.util.List.of());
 
-        when(service.query(eq("reader"), nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any()))
+        when(service.query(eq("reader"), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any()))
                 .thenReturn(page);
 
         mvc.perform(get("/audit/events"))
                 .andExpect(status().isOk());
 
-        verify(service, times(1)).query(eq("reader"), nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any());
+        verify(service, times(1)).query(eq("reader"), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Instant.class), nullable(Instant.class), any());
     }
 
     @Test
