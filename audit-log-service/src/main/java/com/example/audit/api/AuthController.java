@@ -17,10 +17,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.annotation.Profile;
 
 @RestController
 @RequestMapping("/auth")
 @Tag(name = "Authentication", description = "Authentication endpoints")
+@Profile("!keycloak")
 public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private static final int MAX_FAILED_ATTEMPTS = 6;

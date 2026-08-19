@@ -36,7 +36,7 @@ public class UserController {
      * Only admins can create users
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     @Operation(summary = "Create a new user", description = "Creates a new audit system user. Requires ADMIN role.")
     public ResponseEntity<UserResponse> createUser(
         @Valid @RequestBody CreateUserRequest request,
@@ -51,7 +51,7 @@ public class UserController {
      * Get user by ID
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     @Operation(summary = "Get user by ID", description = "Retrieves user information. Requires ADMIN role.")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         return userService.getUserById(id)
@@ -63,7 +63,7 @@ public class UserController {
      * Get user by username
      */
     @GetMapping("/username/{username}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     @Operation(summary = "Get user by username", description = "Retrieves user information by username. Requires ADMIN role.")
     public ResponseEntity<UserResponse> getUserByUsername(@PathVariable String username) {
         return userService.getUserByUsername(username)
@@ -75,7 +75,7 @@ public class UserController {
      * List all active users
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     @Operation(summary = "List all active users", description = "Lists all active users in the system. Requires ADMIN role.")
     public ResponseEntity<List<UserResponse>> listUsers() {
         return ResponseEntity.ok(userService.listActiveUsers());
@@ -85,7 +85,7 @@ public class UserController {
      * List users by role
      */
     @GetMapping("/role/{role}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     @Operation(summary = "List users by role", description = "Lists all users with a specific role. Requires ADMIN role.")
     public ResponseEntity<List<UserResponse>> getUsersByRole(@PathVariable String role) {
         return ResponseEntity.ok(userService.getUsersByRole(role));
@@ -95,7 +95,7 @@ public class UserController {
      * Update user role
      */
     @PutMapping("/{id}/role")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     @Operation(summary = "Update user role", description = "Changes the role of an existing user. Requires ADMIN role.")
     public ResponseEntity<UserResponse> updateUserRole(
         @PathVariable Long id,
@@ -111,7 +111,7 @@ public class UserController {
      * Deactivate user
      */
     @PutMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     @Operation(summary = "Deactivate user", description = "Deactivates a user account (soft delete). Requires ADMIN role.")
     public ResponseEntity<UserResponse> deactivateUser(
         @PathVariable Long id,
@@ -126,7 +126,7 @@ public class UserController {
      * Reactivate user
      */
     @PutMapping("/{id}/reactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     @Operation(summary = "Reactivate user", description = "Reactivates a deactivated user account. Requires ADMIN role.")
     public ResponseEntity<UserResponse> reactivateUser(
         @PathVariable Long id,

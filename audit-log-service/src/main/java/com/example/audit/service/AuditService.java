@@ -5,8 +5,10 @@ import com.example.audit.config.AppProperties;
 import com.example.audit.domain.AuditEvent;
 import com.example.audit.repository.AuditEventRepository;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -32,7 +34,7 @@ public class AuditService {
     public AuditEventResponse append(CreateAuditEventRequest r) {
         long seq = repo.findTopByOrderByChainSequenceDesc().map(e -> e.getChainSequence() + 1).orElse(1L);
         String prev = repo.findTopByOrderByChainSequenceDesc().map(AuditEvent::getContentHash).orElse(props.audit().genesisHash());
-        Instant ts = Instant.now();
+        Instant ts = Instant.now().truncatedTo(ChronoUnit.MICROS);
         String hash = hashes.hash(hashes.canonical(seq, r.eventType(), r.actorId(), r.resourceType(), r.resourceId(), r.payload(), ts));
         AuditEvent e = repo.save(new AuditEvent(seq, r.eventType(), r.actorId(), r.resourceType(), r.resourceId(), r.payload(), ts, prev, hash));
         log.info("audit_event_created id={} sequence={} actor={} resourceType={} resourceId={}", e.getId(), seq, r.actorId(), r.resourceType(), r.resourceId());
@@ -61,17 +63,25 @@ public class AuditService {
             if (!Objects.equals(e.getPreviousHash(), expectedPrev)) return broken(e, "PREVIOUS_HASH_MISMATCH", "Previous hash does not match chain");
             String actual = hashes.hash(hashes.canonical(
                 e.getChainSequence(),
-                hashes.unescape(e.getEventType()),
-                hashes.unescape(e.getActorId()),
-                hashes.unescape(e.getResourceType()),
-                hashes.unescape(e.getResourceId()),
-                hashes.unescape(e.getPayload()),
+                e.getEventType(),
+                e.getActorId(),
+                e.getResourceType(),
+                e.getResourceId(),
+                e.getPayload(),
                 e.getEventTimestamp()));
             if (!Objects.equals(actual, e.getContentHash())) return broken(e, "CONTENT_HASH_MISMATCH", "Stored content hash does not match event content");
             expectedPrev = e.getContentHash();
             expectedSeq++;
         }
         return new VerificationResponse(true, all.size(), null, null, null, "Chain is intact");
+    }
+
+    @Transactional(readOnly = true)
+    public AuditExportResponse export(String actor, String resourceType, String resourceId, String eventType,
+                                      Instant from, Instant to) {
+        Page<AuditEventResponse> page = query(actor, resourceType, resourceId, eventType, from, to, Pageable.unpaged());
+        return new AuditExportResponse("json", "SHA-256", props.audit().genesisHash(), Instant.now(),
+            page.getNumberOfElements(), page.getContent());
     }
 
     private VerificationResponse broken(AuditEvent e, String type, String msg) {

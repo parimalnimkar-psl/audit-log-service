@@ -214,6 +214,41 @@ class AuditServiceTest {
   }
 
   @Test
+  void intactChainVerifiesWhenFieldsContainBackslashes() {
+    Instant now = Instant.parse("2026-01-01T00:00:00Z");
+    String payload = "{\"path\":\"C:\\\\temp\\\\file.txt\"}";
+    AuditEvent event =
+        new AuditEvent(
+            1L,
+            "CREATE",
+            "user1",
+            "FILE",
+            "C:\\temp",
+            payload,
+            now,
+            "GENESIS",
+            hashService.hash(
+                hashService.canonical(1L, "CREATE", "user1", "FILE", "C:\\temp", payload, now)));
+
+    when(repo.findAllByOrderByChainSequenceAsc()).thenReturn(List.of(event));
+
+    var result = service.verify();
+
+    assertTrue(result.intact());
+  }
+
+  @Test
+  void appendUsesMicrosecondTimestampPrecisionForHashing() {
+    when(repo.findTopByOrderByChainSequenceDesc()).thenReturn(Optional.empty());
+    when(repo.save(any())).thenAnswer(i -> i.getArgument(0));
+
+    AuditEventResponse response =
+        service.append(new CreateAuditEventRequest("READ", "user1", "FILE", "C:\\temp", "{}"));
+
+    assertEquals(0, response.eventTimestamp().getNano() % 1_000);
+  }
+
+  @Test
   void chainWithSequenceMismatchFails() {
     Instant now = Instant.now();
     AuditEvent event = new AuditEvent(2L, "CREATE", "user1", "ACCOUNT", "1", "{}", now, "GENESIS",

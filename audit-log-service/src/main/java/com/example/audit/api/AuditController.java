@@ -56,4 +56,15 @@ public class AuditController {
     public VerificationResponse verify() {
         return service.verify();
     }
+
+    @GetMapping("/export")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_EXPORTER') or hasAuthority('AUDIT_EXPORTER') or hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
+    public AuditExportResponse export(@RequestParam(required = false) String actorId,
+                                      @RequestParam(required = false) String resourceType,
+                                      @RequestParam(required = false) String resourceId,
+                                      @RequestParam(required = false) String eventType,
+                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
+        return service.export(actorId, resourceType, resourceId, eventType, from, to);
+    }
 }
