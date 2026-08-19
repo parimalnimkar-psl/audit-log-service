@@ -42,6 +42,7 @@ class AuditServiceTest {
 
   @Test
   void appendUsesGenesisForFirstRecord() {
+    when(repo.nextChainSequence()).thenReturn(1L);
     when(repo.findTopByOrderByChainSequenceDesc()).thenReturn(Optional.empty());
     when(repo.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -50,7 +51,7 @@ class AuditServiceTest {
 
     assertEquals(1L, response.chainSequence());
     assertEquals("GENESIS", response.previousHash());
-    verify(repo, times(2)).findTopByOrderByChainSequenceDesc();
+    verify(repo, times(1)).findTopByOrderByChainSequenceDesc();
   }
 
   @Test
@@ -67,6 +68,7 @@ class AuditServiceTest {
             "GENESIS",
             "HASH1");
 
+    when(repo.nextChainSequence()).thenReturn(2L);
     when(repo.findTopByOrderByChainSequenceDesc()).thenReturn(Optional.of(firstEvent));
     when(repo.save(any())).thenAnswer(i -> i.getArgument(0));
 

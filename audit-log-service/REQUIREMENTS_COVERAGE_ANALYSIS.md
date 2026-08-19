@@ -252,11 +252,11 @@ The project successfully implements the tamper-evident audit log service with al
 ### Code Quality
 | Requirement | Status | Evidence |
 |-----------|--------|----------|
-| Unit test coverage ≥75% | ✅ 93% | JaCoCo report shows 93% line coverage |
-| Branch coverage ≥80% | ✅ 100% | Perfect branch coverage |
-| Test count | ✅ 59 tests | All passing with 100% pass rate |
+| Unit test coverage ≥75% | ✅ 81% | Final JaCoCo XML reports 299/369 covered lines |
+| Branch coverage ≥80% | ⚠️ 67% | Final JaCoCo XML reports 71/106 covered branches |
+| Test count | ✅ 75 tests | All passing with 100% pass rate |
 | Compilation success | ✅ Yes | `mvn clean verify` succeeds |
-| All tests pass | ✅ Yes | 59/59 tests passing |
+| All tests pass | ✅ Yes | 75/75 tests passing |
 
 **Test Distribution:**
 - AuditControllerTest: 10 tests
@@ -356,8 +356,8 @@ The project successfully implements the tamper-evident audit log service with al
 
 ### 🟢 GREEN - Low Risk (No Action Required)
 1. **Scenario A Core Implementation** - Fully complete and tested
-2. **Security & Authorization** - JWT implementation is robust
-3. **Code Quality** - 93% coverage exceeds targets
+2. **Security & Authorization** - Keycloak profile plus local test authentication
+3. **Code Quality** - 81% line coverage exceeds the configured 70% gate
 4. **API Documentation** - Swagger UI complete and functional
 
 ### 🟡 YELLOW - Medium Risk (Plan for Implementation)
@@ -366,10 +366,10 @@ The project successfully implements the tamper-evident audit log service with al
    - **Timeline:** Post-MVP, before production deployment
    - **Effort:** 2-3 days development + testing
 
-2. **Scenario B Export** - Export endpoint not implemented
-   - **Action:** Create GET /audit/export with optional filters
-   - **Timeline:** Q2 2026
-   - **Effort:** 1-2 days development + compliance review
+2. **Scenario B Export** - JSON export endpoint is implemented; export format and compliance field mapping still need customer confirmation
+   - **Action:** Validate `/audit/export` format with compliance stakeholders
+   - **Timeline:** Before production release
+   - **Effort:** Customer review
 
 3. **Scenario B Redaction** - Cryptographic implementation deferred
    - **Action:** Partner with security team for encryption strategy
@@ -418,10 +418,9 @@ The project successfully implements the tamper-evident audit log service with al
    - Role-based database access
    - Backup and recovery procedures
 
-2. **High-Contention Production Optimization** - Future enhancement
-   - Current implementation: Database sequence (suitable for normal load)
-   - Future: Dedicated chain-head locking for very high throughput
-   - Estimated implementation: Post-MVP optimization
+3. **Multi-instance append serialization** - Requires a database-backed chain-head lock or single-writer deployment
+   - Current implementation: database sequence plus process-local append lock
+   - Future: distributed lock/leased writer for horizontally scaled deployments
 
 ---
 
@@ -429,9 +428,9 @@ The project successfully implements the tamper-evident audit log service with al
 
 ### Pre-Release Verification
 - [x] Scenario A 100% functional with all tests passing
-- [x] JWT authentication with all roles operational
+- [x] Local JWT authentication and Keycloak OAuth2/OIDC profile documented
 - [x] Hash chaining and verification working correctly
-- [x] Code coverage 93% (exceeds 70% target)
+- [x] Code coverage 81% (exceeds 70% target)
 - [x] Swagger UI accessible and complete
 - [x] H2 database startup successful
 - [x] PostgreSQL configuration prepared
@@ -441,14 +440,14 @@ The project successfully implements the tamper-evident audit log service with al
 
 ### Production Deployment Checklist
 - [x] Build reproducible: `mvn clean verify` passes
-- [x] All 59 tests passing
+- [x] All 75 tests passing
 - [x] JaCoCo coverage report generated
 - [ ] Scenario B retention job implementation complete (if required before release)
 - [ ] Database backups configured
 - [ ] Database admin least-privilege access enforced
 - [ ] Database audit logging enabled
 - [ ] SonarQube server configured (optional)
-- [ ] API rate limiting configured (if needed)
+- [x] API rate limiting configured
 - [ ] Load testing performed (if required)
 
 ---
@@ -457,7 +456,7 @@ The project successfully implements the tamper-evident audit log service with al
 
 **As of August 18, 2026:**
 
-The Audit Log Service successfully implements all core Scenario A requirements for tamper-evident audit logging. The system is production-ready with comprehensive testing (93% code coverage), secure JWT-based authentication, and complete API documentation.
+The Audit Log Service successfully implements all core Scenario A requirements for tamper-evident audit logging. The final build passes with 75 tests and 81% line coverage. Production deployment should use the Keycloak profile and a database-backed append lock for multi-instance operation.
 
 Scenarios B (Retention/Export) and C (Compliance) contain detailed design documentation. Scenario B features can be implemented within 1-2 weeks if business rules are finalized. Scenario C requires customer clarification of regulatory requirements before implementation.
 

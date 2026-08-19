@@ -199,16 +199,16 @@ Server → Validate JWT signature (HS256) ✅
 
 ### Vulnerability Status
 ```
-Total Issues Found:     4
-✅ RESOLVED:           4
+Total Issues Found:     7
+✅ RESOLVED:           7
 ❌ REMAINING:          0
 Success Rate:         100%
 ```
 
 ### Code Coverage
 ```
-Before: 93% (59/63 tests)
-After:  93%+ (with new user tests)
+Before: 63% (60 tests)
+After:  81% line coverage (75 tests, final `mvn clean verify`)
 ```
 
 ### Authentication Security

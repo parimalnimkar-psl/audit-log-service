@@ -42,7 +42,7 @@ class AuditControllerTest {
     private ObjectMapper mapper;
 
     @Test
-    @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
+        @WithMockUser(username = "user1", authorities = "SCOPE_AUDIT_WRITER")
     void createEventWithValidAuthority() throws Exception {
         CreateAuditEventRequest req =
                 new CreateAuditEventRequest("CREATE", "user1", "ACCOUNT", "123", "{}");
@@ -70,6 +70,25 @@ class AuditControllerTest {
                 .andExpect(jsonPath("$.chainSequence").value(1));
 
         verify(service, times(1)).append(req);
+    }
+
+    @Test
+    @WithMockUser(username = "user1", authorities = "SCOPE_AUDIT_WRITER")
+    void createEventUsesAuthenticatedActorInsteadOfBodyActor() throws Exception {
+        CreateAuditEventRequest request =
+            new CreateAuditEventRequest("CREATE", "spoofed-admin", "ACCOUNT", "123", "{}");
+        CreateAuditEventRequest attributed =
+            new CreateAuditEventRequest("CREATE", "user1", "ACCOUNT", "123", "{}");
+        when(service.append(attributed)).thenReturn(new AuditEventResponse(
+            1L, 1L, "CREATE", "user1", "ACCOUNT", "123", "{}",
+            Instant.parse("2026-01-01T00:00:00Z"), "GENESIS", "HASH1", null));
+
+        mvc.perform(post("/audit/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+            .andExpect(status().isCreated());
+
+        verify(service).append(attributed);
     }
 
     @Test

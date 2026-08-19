@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuditService {
     private static final Logger log = LoggerFactory.getLogger(AuditService.class);
+    private static final ReentrantLock APPEND_LOCK = new ReentrantLock();
     private final AuditEventRepository repo;
     private final HashService hashes;
     private final AppProperties props;
@@ -32,13 +34,18 @@ public class AuditService {
 
     @Transactional
     public AuditEventResponse append(CreateAuditEventRequest r) {
-        long seq = repo.findTopByOrderByChainSequenceDesc().map(e -> e.getChainSequence() + 1).orElse(1L);
-        String prev = repo.findTopByOrderByChainSequenceDesc().map(AuditEvent::getContentHash).orElse(props.audit().genesisHash());
-        Instant ts = Instant.now().truncatedTo(ChronoUnit.MICROS);
-        String hash = hashes.hash(hashes.canonical(seq, r.eventType(), r.actorId(), r.resourceType(), r.resourceId(), r.payload(), ts));
-        AuditEvent e = repo.save(new AuditEvent(seq, r.eventType(), r.actorId(), r.resourceType(), r.resourceId(), r.payload(), ts, prev, hash));
-        log.info("audit_event_created id={} sequence={} actor={} resourceType={} resourceId={}", e.getId(), seq, r.actorId(), r.resourceType(), r.resourceId());
-        return AuditEventResponse.from(e);
+        APPEND_LOCK.lock();
+        try {
+            long seq = repo.nextChainSequence();
+            String prev = repo.findTopByOrderByChainSequenceDesc().map(AuditEvent::getContentHash).orElse(props.audit().genesisHash());
+            Instant ts = Instant.now().truncatedTo(ChronoUnit.MICROS);
+            String hash = hashes.hash(hashes.canonical(seq, r.eventType(), r.actorId(), r.resourceType(), r.resourceId(), r.payload(), ts));
+            AuditEvent e = repo.save(new AuditEvent(seq, r.eventType(), r.actorId(), r.resourceType(), r.resourceId(), r.payload(), ts, prev, hash));
+            log.info("audit_event_created id={} sequence={} actor={} resourceType={} resourceId={}", e.getId(), seq, r.actorId(), r.resourceType(), r.resourceId());
+            return AuditEventResponse.from(e);
+        } finally {
+            APPEND_LOCK.unlock();
+        }
     }
 
     @Transactional(readOnly = true)

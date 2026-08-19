@@ -29,8 +29,10 @@ public class AuditController {
 
     @PostMapping("/events")
     @PreAuthorize("hasAuthority('SCOPE_AUDIT_WRITER') or hasAuthority('AUDIT_WRITER')")
-    public ResponseEntity<AuditEventResponse> create(@Valid @RequestBody CreateAuditEventRequest r) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.append(r));
+    public ResponseEntity<AuditEventResponse> create(@Valid @RequestBody CreateAuditEventRequest r, Authentication authentication) {
+        CreateAuditEventRequest attributed = new CreateAuditEventRequest(
+            r.eventType(), authentication.getName(), r.resourceType(), r.resourceId(), r.payload());
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.append(attributed));
     }
 
     @GetMapping("/events")

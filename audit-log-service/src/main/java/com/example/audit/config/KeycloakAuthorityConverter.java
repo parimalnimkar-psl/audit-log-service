@@ -19,9 +19,12 @@ final class KeycloakAuthorityConverter implements Converter<Jwt, Collection<Gran
         if (realmAccess instanceof Map<?, ?> access && access.get("roles") instanceof Collection<?> roles) {
             roles.stream()
                 .map(Object::toString)
-                .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
-                .map(SimpleGrantedAuthority::new)
-                .forEach(authorities::add);
+                .forEach(role -> {
+                    String normalized = role.startsWith("ROLE_") ? role.substring(5) : role;
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + normalized));
+                    authorities.add(new SimpleGrantedAuthority(normalized));
+                    authorities.add(new SimpleGrantedAuthority("SCOPE_" + normalized));
+                });
         }
         return authorities;
     }
