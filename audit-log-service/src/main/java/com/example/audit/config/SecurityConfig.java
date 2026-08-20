@@ -59,8 +59,4 @@ public class SecurityConfig {
         return new NimbusJwtEncoder(new ImmutableSecret<SecurityContext>(key(p)));
     }
 
-    @Bean
-    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
-        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(10);
-    }
 }

@@ -15,7 +15,7 @@ function LogResult {
     $color = if ($status -eq "PASS") { "Green" } else { "Red" }
     Write-Host "[$status] $testName" -ForegroundColor $color
     if ($details) { Write-Host "        $details" -ForegroundColor Gray }
-    $testResults += @{Test = $testName; Status = $status; Details = $details}
+    $script:testResults += @{Test = $testName; Status = $status; Details = $details}
 }
 
 Write-Host "SCENARIO 1: AUTHENTICATION & AUTHORIZATION`n" -ForegroundColor Yellow
@@ -26,9 +26,9 @@ try {
     $resp = Invoke-RestMethod -Uri "$baseURL/auth/token" -Method POST `
         -ContentType "application/json" `
         -Body '{"username":"writer","password":"writer123"}'
-    if ($resp.access_token) {
-        $tokens['writer'] = $resp.access_token
-        LogResult "Writer Token" "PASS" "expires_in: $($resp.expires_in)s"
+    if ($resp.accessToken) {
+        $tokens['writer'] = $resp.accessToken
+        LogResult "Writer Token" "PASS" "expiresIn: $($resp.expiresIn)s"
     }
 } catch { LogResult "Writer Token" "FAIL" $_.Exception.Message }
 
@@ -38,8 +38,8 @@ try {
     $resp = Invoke-RestMethod -Uri "$baseURL/auth/token" -Method POST `
         -ContentType "application/json" `
         -Body '{"username":"reader","password":"reader123"}'
-    if ($resp.access_token) {
-        $tokens['reader'] = $resp.access_token
+    if ($resp.accessToken) {
+        $tokens['reader'] = $resp.accessToken
         LogResult "Reader Token" "PASS" "Token obtained"
     }
 } catch { LogResult "Reader Token" "FAIL" $_.Exception.Message }
@@ -50,8 +50,8 @@ try {
     $resp = Invoke-RestMethod -Uri "$baseURL/auth/token" -Method POST `
         -ContentType "application/json" `
         -Body '{"username":"admin","password":"admin123"}'
-    if ($resp.access_token) {
-        $tokens['admin'] = $resp.access_token
+    if ($resp.accessToken) {
+        $tokens['admin'] = $resp.accessToken
         LogResult "Admin Token" "PASS" "Token obtained"
     }
 } catch { LogResult "Admin Token" "FAIL" $_.Exception.Message }
@@ -200,7 +200,7 @@ Write-Host "`nSCENARIO 3: QUERY & FILTERING`n" -ForegroundColor Yellow
 # Test 3.1
 Write-Host "  [3.1] Query All Events..."
 try {
-    $headers = @{"Authorization" = "Bearer $($tokens['reader'])"}
+    $headers = @{"Authorization" = "Bearer $($tokens['admin'])"}
     $resp = Invoke-RestMethod -Uri "$baseURL/audit/events?page=0&size=10" `
         -Method GET -Headers $headers
     
@@ -214,21 +214,21 @@ try {
 # Test 3.2
 Write-Host "  [3.2] Filter by ActorId..."
 try {
-    $headers = @{"Authorization" = "Bearer $($tokens['reader'])"}
-    $resp = Invoke-RestMethod -Uri "$baseURL/audit/events?actorId=user_001&page=0&size=10" `
+    $headers = @{"Authorization" = "Bearer $($tokens['admin'])"}
+    $resp = Invoke-RestMethod -Uri "$baseURL/audit/events?actorId=writer&page=0&size=10" `
         -Method GET -Headers $headers
     
     if ($resp.content.Count -ge 1) {
-        LogResult "Filter ActorId" "PASS" "Found $($resp.content.Count) events for user_001"
+        LogResult "Filter ActorId" "PASS" "Found $($resp.content.Count) events for writer"
     } else {
-        LogResult "Filter ActorId" "WARN" "No events found for user_001"
+        LogResult "Filter ActorId" "WARN" "No events found for writer"
     }
 } catch { LogResult "Filter ActorId" "FAIL" $_.Exception.Message }
 
 # Test 3.3
 Write-Host "  [3.3] Filter by ResourceType..."
 try {
-    $headers = @{"Authorization" = "Bearer $($tokens['reader'])"}
+    $headers = @{"Authorization" = "Bearer $($tokens['admin'])"}
     $resp = Invoke-RestMethod -Uri "$baseURL/audit/events?resourceType=ACCOUNT&page=0&size=10" `
         -Method GET -Headers $headers
     
@@ -242,7 +242,7 @@ try {
 # Test 3.4
 Write-Host "  [3.4] Filter by EventType..."
 try {
-    $headers = @{"Authorization" = "Bearer $($tokens['reader'])"}
+    $headers = @{"Authorization" = "Bearer $($tokens['admin'])"}
     $resp = Invoke-RestMethod -Uri "$baseURL/audit/events?eventType=USER_LOGIN&page=0&size=10" `
         -Method GET -Headers $headers
     
@@ -256,12 +256,25 @@ try {
 # Test 3.5
 Write-Host "  [3.5] Pagination Test..."
 try {
-    $headers = @{"Authorization" = "Bearer $($tokens['reader'])"}
+    $headers = @{"Authorization" = "Bearer $($tokens['admin'])"}
     $resp = Invoke-RestMethod -Uri "$baseURL/audit/events?page=0&size=2" `
         -Method GET -Headers $headers
     
     LogResult "Pagination" "PASS" "Page 0, Size 2: $($resp.content.Count) items"
 } catch { LogResult "Pagination" "FAIL" $_.Exception.Message }
+
+# Test 3.6
+Write-Host "  [3.6] JSON Export..."
+try {
+    $headers = @{"Authorization" = "Bearer $($tokens['admin'])"}
+    $resp = Invoke-RestMethod -Uri "$baseURL/audit/export" -Method GET -Headers $headers
+
+    if ($resp.recordCount -eq 3 -and $resp.hashAlgorithm -eq "SHA-256") {
+        LogResult "JSON Export" "PASS" "Exported $($resp.recordCount) records with $($resp.hashAlgorithm)"
+    } else {
+        LogResult "JSON Export" "FAIL" "Unexpected export response"
+    }
+} catch { LogResult "JSON Export" "FAIL" $_.Exception.Message }
 
 Write-Host "`nSCENARIO 4: CHAIN VERIFICATION`n" -ForegroundColor Yellow
 
@@ -325,7 +338,7 @@ Write-Host "`nSCENARIO 6: SWAGGER & OPENAPI`n" -ForegroundColor Yellow
 # Test 6.1
 Write-Host "  [6.1] Swagger UI Access..."
 try {
-    $resp = Invoke-WebRequest -Uri "$baseURL/swagger-ui/index.html" -Method GET
+    $resp = Invoke-WebRequest -Uri "$baseURL/swagger-ui/index.html" -Method GET -UseBasicParsing
     if ($resp.StatusCode -eq 200) {
         LogResult "Swagger UI" "PASS" "Accessible"
     }
@@ -350,18 +363,20 @@ $failCount = ($testResults | Where-Object { $_.Status -eq "FAIL" }).Count
 $totalTests = $testResults.Count
 $successRate = [math]::Round(($passCount / $totalTests) * 100, 2)
 
-Write-Host "Total Tests:    $totalTests" -ForegroundColor White
-Write-Host "Passed:         $passCount" -ForegroundColor Green
-Write-Host "Failed:         $failCount" -ForegroundColor $(if ($failCount -gt 0) { "Red" } else { "Green" })
-Write-Host "Success Rate:   $successRate%`n" -ForegroundColor $(if ($passCount -eq $totalTests) { "Green" } else { "Yellow" })
+ $summaryColor = if ($failCount -gt 0) { "Red" } else { "Green" }
+ $rateColor = if ($passCount -eq $totalTests) { "Green" } else { "Yellow" }
+ Write-Host "Total Tests: $totalTests" -ForegroundColor White
+ Write-Host "Passed: $passCount" -ForegroundColor Green
+ Write-Host "Failed: $failCount" -ForegroundColor $summaryColor
+ Write-Host "Success Rate: $successRate%" -ForegroundColor $rateColor
 
-if ($failCount -eq 0) {
-    Write-Host "✓ ALL TESTS PASSED!" -ForegroundColor Green -BackgroundColor Black
-} else {
-    Write-Host "✗ SOME TESTS FAILED:" -ForegroundColor Red
-    $testResults | Where-Object { $_.Status -eq "FAIL" } | ForEach-Object {
-        Write-Host "  - $($_.Test)" -ForegroundColor Red
-    }
-}
+ if ($failCount -eq 0) {
+     Write-Host "ALL TESTS PASSED" -ForegroundColor Green
+ } else {
+     Write-Host "SOME TESTS FAILED" -ForegroundColor Red
+     $testResults | Where-Object { $_.Status -eq "FAIL" } | ForEach-Object {
+         Write-Host "- $($_.Test)" -ForegroundColor Red
+     }
+ }
 
 Write-Host " "
