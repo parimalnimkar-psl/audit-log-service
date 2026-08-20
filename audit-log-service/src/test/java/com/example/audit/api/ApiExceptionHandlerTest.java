@@ -67,4 +67,23 @@ class ApiExceptionHandlerTest {
                 .andExpect(jsonPath("$.error").value("validation_failed"))
                 .andExpect(jsonPath("$.fields").isMap());
     }
+
+    @Test
+    @WithMockUser(authorities = "SCOPE_AUDIT_WRITER")
+    void payloadOverMaximumLengthReturnsValidationError() throws Exception {
+        String oversizedPayload = "x".repeat(10_001);
+        String invalidJson = mapper.writeValueAsString(java.util.Map.of(
+            "eventType", "READ",
+            "actorId", "writer",
+            "resourceType", "ACCOUNT",
+            "resourceId", "1",
+            "payload", oversizedPayload));
+
+        mvc.perform(post("/audit/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("validation_failed"))
+            .andExpect(jsonPath("$.fields.payload").exists());
+    }
 }

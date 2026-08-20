@@ -38,6 +38,7 @@ The issuer must provide realm roles `AUDIT_READER`, `AUDIT_WRITER`, `AUDIT_ADMIN
 ## Export and pagination
 
 - `GET /audit/events?page=0&size=20` supports bounded pagination; the maximum page size is 200.
+- `GET /audit/events/{id}` returns one event for its actor; admins can read any event, while other readers receive `404` for missing or cross-actor records.
 - `GET /audit/export` is restricted to `AUDIT_EXPORTER` or `AUDIT_ADMIN` and returns JSON records with SHA-256, genesis, sequence, and chain-hash metadata.
 - Audit and user API traffic is rate-limited per client IP; throttled requests return `429` with `Retry-After: 60`.
 

@@ -5,7 +5,7 @@
 **Version:** 1.0.0  
 **Status:** Current implementation verified by the final build; historical examples in older reports are not executable evidence.
 
-**Final evidence:** `mvn clean verify` passed 93 tests with 0 failures, 0 errors, and 0 skipped. Current JaCoCo XML reports 339/406 lines covered (83.5%) and 79/114 branches covered (69.3%). The authoritative artifacts are `target/surefire-reports/TEST-*.xml` and `target/site/jacoco/jacoco.xml`.
+**Final evidence:** `mvn clean verify` passed 101 tests with 0 failures, 0 errors, and 0 skipped. Current JaCoCo XML reports 348/415 lines covered (83.9%) and 86/122 branches covered (70.5%). The authoritative artifacts are `target/surefire-reports/TEST-*.xml` and `target/site/jacoco/jacoco.xml`.
 
 ---
 
@@ -202,17 +202,14 @@ The project successfully implements the tamper-evident audit log service with al
 
 | Component | Status | Evidence |
 |-----------|--------|----------|
-| Export API design | ⏳ Designed | Pattern documented in scenario-b.md |
-| Selected records export | ⏳ Designed | Ready to implement with Specification filters |
-| Chain metadata inclusion | ⏳ Designed | sequence, previousHash, contentHash, algorithm |
-| Genesis information | ⏳ Designed | Can be included from AppProperties |
-| Boundary evidence | ⏳ Designed | Ready to verify subset integrity |
+| Export API design | ✅ Complete | `AuditController.export()` at `GET /audit/export` |
+| Selected records export | ✅ Complete | Optional actor, resource, event type, and time-range filters |
+| Chain metadata inclusion | ✅ Complete | sequence, previousHash, contentHash, algorithm |
+| Genesis information | ✅ Complete | Included from `AppProperties` |
+| Boundary evidence | ✅ Complete | Export includes selected records and record count; full-chain verification remains admin-only |
 
 **Implementation Status:**
-- ✅ Architecture designed
-- ⏳ API endpoint not implemented (awaits export format specification)
-
-**Recommendation:** Create new endpoint `GET /audit/export` with optional date range, actor, resource filters to support compliance export scenarios.
+- ✅ JSON export endpoint implemented and covered by service, controller, persistence, and live API tests.
 
 ---
 
