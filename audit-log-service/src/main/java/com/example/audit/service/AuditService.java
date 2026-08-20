@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
@@ -58,6 +59,13 @@ public class AuditService {
         if (from != null) s = s.and((r, q, c) -> c.greaterThanOrEqualTo(r.get("eventTimestamp"), from));
         if (to != null) s = s.and((r, q, c) -> c.lessThanOrEqualTo(r.get("eventTimestamp"), to));
         return repo.findAll(s, page).map(AuditEventResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AuditEventResponse> getById(long id, String actor, boolean admin) {
+        return repo.findById(id)
+            .filter(event -> admin || Objects.equals(event.getActorId(), actor))
+            .map(AuditEventResponse::from);
     }
 
     @Transactional(readOnly = true)

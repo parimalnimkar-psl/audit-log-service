@@ -131,6 +131,43 @@ class AuditControllerTest {
         mvc.perform(get("/audit/events")).andExpect(status().isUnauthorized());
     }
 
+    @Test
+    @WithMockUser(username = "reader", authorities = "SCOPE_AUDIT_READER")
+    void readerCanGetOwnEvent() throws Exception {
+        when(service.getById(1L, "reader", false)).thenReturn(java.util.Optional.of(
+            new AuditEventResponse(1L, 1L, "READ", "reader", "ACCOUNT", "1", "{}",
+                Instant.parse("2026-01-01T00:00:00Z"), "GENESIS", "HASH1", null)));
+
+        mvc.perform(get("/audit/events/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.actorId").value("reader"));
+    }
+
+    @Test
+    @WithMockUser(username = "reader", authorities = "SCOPE_AUDIT_READER")
+    void readerCannotGetAnotherActorsEvent() throws Exception {
+        when(service.getById(1L, "reader", false)).thenReturn(java.util.Optional.empty());
+
+        mvc.perform(get("/audit/events/1")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", authorities = "SCOPE_AUDIT_ADMIN")
+    void adminCanGetAnyEvent() throws Exception {
+        when(service.getById(1L, "admin", true)).thenReturn(java.util.Optional.of(
+            new AuditEventResponse(1L, 1L, "READ", "writer", "ACCOUNT", "1", "{}",
+                Instant.parse("2026-01-01T00:00:00Z"), "GENESIS", "HASH1", null)));
+
+        mvc.perform(get("/audit/events/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.actorId").value("writer"));
+    }
+
+    @Test
+    void getEventWithoutAuthShouldFailUnauthorized() throws Exception {
+        mvc.perform(get("/audit/events/1")).andExpect(status().isUnauthorized());
+    }
+
 
     @Test
     @WithMockUser(authorities = "SCOPE_AUDIT_ADMIN")

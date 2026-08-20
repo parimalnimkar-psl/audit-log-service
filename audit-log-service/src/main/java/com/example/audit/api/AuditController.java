@@ -53,6 +53,17 @@ public class AuditController {
         return service.query(resolvedActorId, resourceType, resourceId, eventType, from, to, pageable);
     }
 
+    @GetMapping("/events/{id}")
+    @PreAuthorize("hasAuthority('SCOPE_AUDIT_READER') or hasAuthority('AUDIT_READER') or hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
+    public ResponseEntity<AuditEventResponse> getById(@PathVariable long id, Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+            .anyMatch(authority -> "SCOPE_AUDIT_ADMIN".equals(authority.getAuthority())
+                || "AUDIT_ADMIN".equals(authority.getAuthority()));
+        return service.getById(id, authentication.getName(), isAdmin)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/verify")
     @PreAuthorize("hasAuthority('SCOPE_AUDIT_ADMIN') or hasAuthority('AUDIT_ADMIN')")
     public VerificationResponse verify() {

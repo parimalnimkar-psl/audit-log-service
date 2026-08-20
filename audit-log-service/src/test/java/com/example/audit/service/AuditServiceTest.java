@@ -181,6 +181,33 @@ class AuditServiceTest {
   }
 
   @Test
+  void getByIdReturnsEventForOwner() {
+    AuditEvent event = new AuditEvent(1L, "READ", "reader", "ACCOUNT", "1", "{}",
+        Instant.parse("2026-01-01T00:00:00Z"), "GENESIS", "HASH1");
+    when(repo.findById(1L)).thenReturn(Optional.of(event));
+
+    assertTrue(service.getById(1L, "reader", false).isPresent());
+  }
+
+  @Test
+  void getByIdHidesAnotherActorsEventFromNonAdmin() {
+    AuditEvent event = new AuditEvent(1L, "READ", "writer", "ACCOUNT", "1", "{}",
+        Instant.parse("2026-01-01T00:00:00Z"), "GENESIS", "HASH1");
+    when(repo.findById(1L)).thenReturn(Optional.of(event));
+
+    assertTrue(service.getById(1L, "reader", false).isEmpty());
+  }
+
+  @Test
+  void getByIdAllowsAdminToReadAnotherActorsEvent() {
+    AuditEvent event = new AuditEvent(1L, "READ", "writer", "ACCOUNT", "1", "{}",
+        Instant.parse("2026-01-01T00:00:00Z"), "GENESIS", "HASH1");
+    when(repo.findById(1L)).thenReturn(Optional.of(event));
+
+    assertTrue(service.getById(1L, "admin", true).isPresent());
+  }
+
+  @Test
   void emptyChainVerifies() {
     when(repo.findAllByOrderByChainSequenceAsc()).thenReturn(List.of());
 
