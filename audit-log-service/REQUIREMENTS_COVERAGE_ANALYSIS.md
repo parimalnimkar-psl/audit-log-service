@@ -5,7 +5,7 @@
 **Version:** 1.0.0  
 **Status:** Current implementation verified by the final build; historical examples in older reports are not executable evidence.
 
-**Final evidence:** `mvn clean verify` passed 86 tests with 0 failures, 0 errors, and 0 skipped. JaCoCo XML reports 322/385 lines covered (83.6%) and 72/106 branches covered (67.9%).
+**Final evidence:** `mvn clean verify` passed 93 tests with 0 failures, 0 errors, and 0 skipped. Current JaCoCo XML reports 339/406 lines covered (83.5%) and 79/114 branches covered (69.3%). The authoritative artifacts are `target/surefire-reports/TEST-*.xml` and `target/site/jacoco/jacoco.xml`.
 
 ---
 
